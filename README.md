@@ -3,8 +3,13 @@
 DS1 - Mini-Projet - ISIDS (Express.js + MongoDB)
 
 ## Auteurs
+<<<<<<< HEAD
 - omar farouk khemir
 - 
+=======
+-Omar Farouk Khemir
+
+>>>>>>> 171e4f9 (feat: MongoDB connection w base express server)
 
 ## Installation
 ```bash
