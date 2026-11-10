@@ -3,8 +3,8 @@
 DS1 - Mini-Projet - ISIDS (Express.js + MongoDB)
 
 ## Auteurs
-- **Nom Prénom 1** (à remplacer)
-- **Nom Prénom 2** (à remplacer, ou supprimer si monôme)
+- omar farouk khemir
+- 
 
 ## Installation
 ```bash
