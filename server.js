@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 const connectDB = require('./config/db');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
@@ -11,6 +12,12 @@ app.use(express.json());
 
 // روت بسيطة نتأكدو بيها إلي السيرفر يخدم
 app.get('/', (req, res) => res.json({ message: 'API Projets & Taches OK' }));
+
+// إذا الروت موش موجودة
+app.use((req, res) => res.status(404).json({ message: 'Route introuvable' }));
+
+// middleware متاع الأخطاء لازم يكون في الآخر
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
