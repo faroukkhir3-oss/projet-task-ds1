@@ -38,3 +38,8 @@ exports.login = asyncHandler(async (req, res) => {
     user: { id: user._id, nom: user.nom, login: user.login, role: user.role },
   });
 });
+
+// GET /api/auth/me
+exports.me = asyncHandler(async (req, res) => {
+  res.json(req.user);
+});
