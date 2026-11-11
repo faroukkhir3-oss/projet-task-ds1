@@ -10,6 +10,9 @@ const app = express();
 // باش يقرا الـ JSON اللي يجي في الـ body
 app.use(express.json());
 
+// الروتات متاع التطبيق
+app.use('/api/auth', require('./routes/authRoutes'));
+
 // روت بسيطة نتأكدو بيها إلي السيرفر يخدم
 app.get('/', (req, res) => res.json({ message: 'API Projets & Taches OK' }));
 
