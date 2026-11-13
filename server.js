@@ -12,6 +12,7 @@ app.use(express.json());
 
 // الروتات متاع التطبيق
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/projects', require('./routes/projectRoutes'));
 
 // روت بسيطة نتأكدو بيها إلي السيرفر يخدم
 app.get('/', (req, res) => res.json({ message: 'API Projets & Taches OK' }));
