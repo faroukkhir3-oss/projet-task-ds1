@@ -42,3 +42,42 @@ exports.getProjects = asyncHandler(async (req, res) => {
 
   res.json({ count: projects.length, projects });
 });
+
+// GET /api/projects/:id
+exports.getProject = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id).populate('proprietaire', 'nom login');
+  if (!project) return res.status(404).json({ message: 'Projet introuvable' });
+
+  // نقارنو بالـ id الأصلي (مش populated)
+  const ownerId = project.proprietaire._id.toString();
+  if (req.user.role !== 'manager' && ownerId !== req.user._id.toString()) {
+    return res.status(403).json({ message: 'Acces refuse' });
+  }
+  res.json(project);
+});
+
+// PUT /api/projects/:id
+exports.updateProject = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) return res.status(404).json({ message: 'Projet introuvable' });
+  if (!canAccess(project, req.user)) return res.status(403).json({ message: 'Acces refuse' });
+
+  // نبدلو برك الحقول المسموحة (ما نبدلوش الـ owner)
+  ['nom', 'description', 'statut'].forEach((f) => {
+    if (req.body[f] !== undefined) project[f] = req.body[f];
+  });
+  await project.save(); // save باش يخدم الـ validation
+  res.json(project);
+});
+
+// DELETE /api/projects/:id
+exports.deleteProject = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) return res.status(404).json({ message: 'Projet introuvable' });
+  if (!canAccess(project, req.user)) return res.status(403).json({ message: 'Acces refuse' });
+
+  // نفسخو التاسكات متاع المشروع قبل
+  await Task.deleteMany({ projet: project._id });
+  await project.deleteOne();
+  res.json({ message: 'Projet et ses taches supprimes' });
+});
