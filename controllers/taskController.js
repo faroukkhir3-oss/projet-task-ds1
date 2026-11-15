@@ -51,3 +51,44 @@ exports.createTask = asyncHandler(async (req, res) => {
   });
   res.status(201).json(task);
 });
+
+// GET /api/tasks?projet=&statut=&assigneA=&search=&deadlineAvant=&sort=
+// GET /api/projects/:projectId/tasks  (نفس الشي بس مفلتر على المشروع)
+exports.getTasks = asyncHandler(async (req, res) => {
+  const filter = {};
+  const projet = req.params.projectId || req.query.projet;
+  if (projet) filter.projet = projet;
+  if (req.query.statut) filter.statut = req.query.statut;
+  if (req.query.assigneA && isManager(req.user)) filter.assigneA = req.query.assigneA;
+
+  // بحث بالعنوان ولا الوصف
+  if (req.query.search) {
+    const rx = new RegExp(escapeRegex(req.query.search), 'i');
+    filter.$or = [{ titre: rx }, { description: rx }];
+  }
+
+  // فلترة بالـ deadline
+  if (req.query.deadlineAvant || req.query.deadlineApres) {
+    filter.deadline = {};
+    if (req.query.deadlineAvant) filter.deadline.$lte = new Date(req.query.deadlineAvant);
+    if (req.query.deadlineApres) filter.deadline.$gte = new Date(req.query.deadlineApres);
+  }
+
+  // اليوزر العادي يشوف برك تاسكات مشاريعو + التاسكات المعيّنة ليه
+  if (!isManager(req.user)) {
+    const myProjects = await Project.find({ proprietaire: req.user._id }).distinct('_id');
+    filter.$and = [
+      { $or: [{ projet: { $in: myProjects } }, { assigneA: req.user._id }] },
+    ];
+  }
+
+  const sort = buildSort(req.query.sort, ['titre', 'statut', 'deadline', 'dateCreation', 'createdAt']);
+  if (sort.createdAt) { sort.dateCreation = sort.createdAt; delete sort.createdAt; }
+
+  const tasks = await Task.find(filter)
+    .sort(sort)
+    .populate('projet', 'nom')
+    .populate('assigneA', 'nom login');
+
+  res.json({ count: tasks.length, tasks });
+});

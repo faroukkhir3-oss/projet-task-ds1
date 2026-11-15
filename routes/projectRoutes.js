@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const c = require('../controllers/projectController');
-const { createTask } = require('../controllers/taskController');
+const { getTasks, createTask } = require('../controllers/taskController');
 const { protect } = require('../middleware/auth');
 
 // كل روتات المشاريع تحتاج authentification
@@ -10,6 +10,6 @@ router.route('/').post(c.createProject).get(c.getProjects);
 router.route('/:id').get(c.getProject).put(c.updateProject).delete(c.deleteProject);
 
 // تاسكات مرتبطة بمشروع معين
-router.route('/:projectId/tasks').post(createTask);
+router.route('/:projectId/tasks').get(getTasks).post(createTask);
 
 module.exports = router;
