@@ -92,3 +92,52 @@ exports.getTasks = asyncHandler(async (req, res) => {
 
   res.json({ count: tasks.length, tasks });
 });
+
+// GET /api/tasks/:id
+exports.getTask = asyncHandler(async (req, res) => {
+  const task = await Task.findById(req.params.id)
+    .populate('projet', 'nom')
+    .populate('assigneA', 'nom login');
+  if (!task) return res.status(404).json({ message: 'Tache introuvable' });
+
+  // الـ populate بدّل الـ ids، نرجعو نجيبو التاسك الخام للتحقق
+  const raw = await Task.findById(req.params.id);
+  if (!(await canAccessTask(raw, req.user))) {
+    return res.status(403).json({ message: 'Acces refuse' });
+  }
+  res.json(task);
+});
+
+// PUT /api/tasks/:id
+exports.updateTask = asyncHandler(async (req, res) => {
+  const task = await Task.findById(req.params.id);
+  if (!task) return res.status(404).json({ message: 'Tache introuvable' });
+  if (!(await canAccessTask(task, req.user))) {
+    return res.status(403).json({ message: 'Acces refuse' });
+  }
+
+  // تغيير التعيين : manager فقط
+  if (req.body.assigneA !== undefined) {
+    if (!isManager(req.user)) {
+      return res.status(403).json({ message: 'Seul le manager peut affecter une tache' });
+    }
+    task.assigneA = await checkAssignee(req.body.assigneA);
+  }
+
+  ['titre', 'description', 'statut', 'deadline'].forEach((f) => {
+    if (req.body[f] !== undefined) task[f] = req.body[f];
+  });
+  await task.save(); // validation متاع statut تخدم هنا
+  res.json(task);
+});
+
+// DELETE /api/tasks/:id
+exports.deleteTask = asyncHandler(async (req, res) => {
+  const task = await Task.findById(req.params.id);
+  if (!task) return res.status(404).json({ message: 'Tache introuvable' });
+  if (!(await canAccessTask(task, req.user))) {
+    return res.status(403).json({ message: 'Acces refuse' });
+  }
+  await task.deleteOne();
+  res.json({ message: 'Tache supprimee' });
+});
